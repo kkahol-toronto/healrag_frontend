@@ -19,41 +19,6 @@ jobs:
         with:
           submodules: true
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build application
-        run: npm run build
-        env:
-          VITE_APP_TITLE: "HEALRAG Security Assistant"
-          VITE_AZURE_CLIENT_ID: ${{ secrets.VITE_AZURE_CLIENT_ID }}
-          VITE_DEBUG_MODE: "false"
-          VITE_HEALRAG_BACKEND_URL: ${{ secrets.VITE_HEALRAG_BACKEND_URL }}
-
-      - name: Remove source maps to reduce file count
-        run: find dist -name "*.map" -delete
-
-      - name: Check file count and details before deployment
-        run: |
-          echo "Total files:"
-          find dist -type f | wc -l
-          echo "File breakdown:"
-          find dist -type f -name "*.js" | wc -l | xargs echo "JS files:"
-          find dist -type f -name "*.css" | wc -l | xargs echo "CSS files:"
-          find dist -type f -name "*.map" | wc -l | xargs echo "Map files:"
-          find dist -type f -name "*.png" -o -name "*.jpg" -o -name "*.svg" -o -name "*.ico" | wc -l | xargs echo "Image files:"
-          echo "Largest files:"
-          find dist -type f -exec ls -lh {} \; | sort -k5 -hr | head -10
-
-      - name: List build output (for debugging)
-        run: ls -la dist/
-
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -64,7 +29,12 @@ jobs:
           app_location: "/"
           api_location: ""
           output_location: "dist"
-          skip_app_build: true
+          # Remove skip_app_build to let Azure handle everything
+        env:
+          VITE_APP_TITLE: "HEALRAG Security Assistant"
+          VITE_AZURE_CLIENT_ID: ${{ secrets.VITE_AZURE_CLIENT_ID }}
+          VITE_DEBUG_MODE: "false"
+          VITE_HEALRAG_BACKEND_URL: ${{ secrets.VITE_HEALRAG_BACKEND_URL }}
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'

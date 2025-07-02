@@ -10,25 +10,8 @@ export default defineConfig({
     build: {
         outDir: "dist",
         emptyOutDir: true,
-        // No source maps
         sourcemap: false,
-        chunkSizeWarningLimit: 5000,
-        rollupOptions: {
-            output: {
-                // Put EVERYTHING into a single JavaScript file
-                manualChunks: () => 'app',
-                // Minimize asset files
-                assetFileNames: 'assets/[name].[ext]',
-                chunkFileNames: 'assets/[name].js',
-                entryFileNames: 'assets/[name].js'
-            }
-        },
-        target: "esnext",
-        // Inline ALL assets under 200KB (very aggressive)
-        assetsInlineLimit: 200000,
-        // Single CSS file
-        cssCodeSplit: false,
-        minify: true
+        target: "esnext"
     },
     server: {
         port: 3000,
