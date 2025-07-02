@@ -36,6 +36,9 @@ jobs:
           VITE_DEBUG_MODE: "false"
           VITE_HEALRAG_BACKEND_URL: ${{ secrets.VITE_HEALRAG_BACKEND_URL }}
 
+      - name: List build output (for debugging)
+        run: ls -la dist/
+
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -46,7 +49,7 @@ jobs:
           app_location: "/"
           api_location: ""
           output_location: "dist"
-          skip_app_build: true  # Skip build since we already built it
+          skip_app_build: true
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
