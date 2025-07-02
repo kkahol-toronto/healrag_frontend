@@ -14,6 +14,9 @@ import i18next from "./i18n/config";
 // Ensure React is available globally for production builds
 window.React = React;
 
+// Debug log to verify deployment
+console.log("🚀 HEALRAG App loading - Build timestamp:", new Date().toISOString());
+
 initializeIcons();
 
 const router = createHashRouter([
