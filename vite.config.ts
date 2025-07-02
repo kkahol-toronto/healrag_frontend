@@ -10,27 +10,24 @@ export default defineConfig({
     build: {
         outDir: "dist",
         emptyOutDir: true,
-        // Disable source maps completely
+        // No source maps
         sourcemap: false,
-        // Increase chunk size warning limit
-        chunkSizeWarningLimit: 2000,
+        chunkSizeWarningLimit: 5000,
         rollupOptions: {
             output: {
-                // More aggressive chunking - put everything into fewer files
-                manualChunks: {
-                    // Single vendor chunk for all node_modules
-                    'vendor': ['react', 'react-dom'],
-                    // Single fluentui chunk
-                    'fluentui': ['@fluentui/react', '@fluentui/react-icons']
-                }
+                // Put EVERYTHING into a single JavaScript file
+                manualChunks: () => 'app',
+                // Minimize asset files
+                assetFileNames: 'assets/[name].[ext]',
+                chunkFileNames: 'assets/[name].js',
+                entryFileNames: 'assets/[name].js'
             }
         },
         target: "esnext",
-        // Inline more assets to reduce file count (increase from 8kb to 32kb)
-        assetsInlineLimit: 32768,
-        // Disable CSS code splitting completely
+        // Inline ALL assets under 200KB (very aggressive)
+        assetsInlineLimit: 200000,
+        // Single CSS file
         cssCodeSplit: false,
-        // Use default minification (esbuild) instead of terser
         minify: true
     },
     server: {
@@ -38,7 +35,6 @@ export default defineConfig({
         host: "localhost"
     },
     define: {
-        // Ensure React is available globally for libraries that expect it
         global: 'window'
     }
 });
