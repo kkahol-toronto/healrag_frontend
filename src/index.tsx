@@ -11,6 +11,9 @@ import Chat from "./pages/chat/Chat";
 import LayoutWrapper from "./layoutWrapper";
 import i18next from "./i18n/config";
 
+// Ensure React is available globally for production builds
+window.React = React;
+
 initializeIcons();
 
 const router = createHashRouter([

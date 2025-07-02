@@ -29,5 +29,9 @@ export default defineConfig({
     server: {
         port: 3000,
         host: "localhost"
+    },
+    define: {
+        // Ensure React is available globally for libraries that expect it
+        global: 'window'
     }
 });
