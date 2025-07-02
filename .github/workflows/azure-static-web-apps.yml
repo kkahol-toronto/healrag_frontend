@@ -39,8 +39,17 @@ jobs:
       - name: Remove source maps to reduce file count
         run: find dist -name "*.map" -delete
 
-      - name: Check file count before deployment
-        run: find dist -type f | wc -l
+      - name: Check file count and details before deployment
+        run: |
+          echo "Total files:"
+          find dist -type f | wc -l
+          echo "File breakdown:"
+          find dist -type f -name "*.js" | wc -l | xargs echo "JS files:"
+          find dist -type f -name "*.css" | wc -l | xargs echo "CSS files:"
+          find dist -type f -name "*.map" | wc -l | xargs echo "Map files:"
+          find dist -type f -name "*.png" -o -name "*.jpg" -o -name "*.svg" -o -name "*.ico" | wc -l | xargs echo "Image files:"
+          echo "Largest files:"
+          find dist -type f -exec ls -lh {} \; | sort -k5 -hr | head -10
 
       - name: List build output (for debugging)
         run: ls -la dist/

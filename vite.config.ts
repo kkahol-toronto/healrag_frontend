@@ -10,28 +10,34 @@ export default defineConfig({
     build: {
         outDir: "dist",
         emptyOutDir: true,
-        // Disable source maps for production to reduce file count
+        // Disable source maps completely
         sourcemap: false,
         // Increase chunk size warning limit
-        chunkSizeWarningLimit: 1000,
+        chunkSizeWarningLimit: 2000,
         rollupOptions: {
             output: {
-                manualChunks: id => {
-                    if (id.includes("@fluentui/react-icons")) {
-                        return "fluentui-icons";
-                    } else if (id.includes("@fluentui/react")) {
-                        return "fluentui-react";
-                    } else if (id.includes("node_modules")) {
-                        return "vendor";
-                    }
+                // More aggressive chunking - put everything into fewer files
+                manualChunks: {
+                    // Single vendor chunk for all node_modules
+                    'vendor': ['react', 'react-dom'],
+                    // Single fluentui chunk
+                    'fluentui': ['@fluentui/react', '@fluentui/react-icons']
                 }
             }
         },
         target: "esnext",
-        // Inline smaller assets to reduce file count
-        assetsInlineLimit: 8192,
-        // Disable CSS code splitting to reduce file count
-        cssCodeSplit: false
+        // Inline more assets to reduce file count (increase from 8kb to 32kb)
+        assetsInlineLimit: 32768,
+        // Disable CSS code splitting completely
+        cssCodeSplit: false,
+        // Minimize the number of output files
+        minify: 'terser',
+        terserOptions: {
+            compress: {
+                drop_console: true,
+                drop_debugger: true,
+            },
+        }
     },
     server: {
         port: 3000,
