@@ -36,6 +36,12 @@ jobs:
           VITE_DEBUG_MODE: "false"
           VITE_HEALRAG_BACKEND_URL: ${{ secrets.VITE_HEALRAG_BACKEND_URL }}
 
+      - name: Remove source maps to reduce file count
+        run: find dist -name "*.map" -delete
+
+      - name: Check file count before deployment
+        run: find dist -type f | wc -l
+
       - name: List build output (for debugging)
         run: ls -la dist/
 

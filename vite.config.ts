@@ -10,7 +10,10 @@ export default defineConfig({
     build: {
         outDir: "dist",
         emptyOutDir: true,
-        sourcemap: true,
+        // Disable source maps for production to reduce file count
+        sourcemap: false,
+        // Increase chunk size warning limit
+        chunkSizeWarningLimit: 1000,
         rollupOptions: {
             output: {
                 manualChunks: id => {
@@ -24,7 +27,11 @@ export default defineConfig({
                 }
             }
         },
-        target: "esnext"
+        target: "esnext",
+        // Inline smaller assets to reduce file count
+        assetsInlineLimit: 8192,
+        // Disable CSS code splitting to reduce file count
+        cssCodeSplit: false
     },
     server: {
         port: 3000,
