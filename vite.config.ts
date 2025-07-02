@@ -30,14 +30,8 @@ export default defineConfig({
         assetsInlineLimit: 32768,
         // Disable CSS code splitting completely
         cssCodeSplit: false,
-        // Minimize the number of output files
-        minify: 'terser',
-        terserOptions: {
-            compress: {
-                drop_console: true,
-                drop_debugger: true,
-            },
-        }
+        // Use default minification (esbuild) instead of terser
+        minify: true
     },
     server: {
         port: 3000,
