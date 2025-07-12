@@ -6,11 +6,31 @@
     width: 100%;
     padding: 0.8rem;
     background: white;
+    position: relative;
+}
+
+.questionInputContainer::after {
+    content: "";
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(to right, #EA9936, #4809A4);
+    border-radius: 0 0 0.5rem 0.5rem;
 }
 
 .questionInputTextArea {
     width: 100%;
     line-height: 2.5rem;
+}
+
+.questionInputLeftIcons {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 0.25rem;
+    margin-right: 0.5rem;
 }
 
 .questionInputButtonsContainer {

@@ -1,4 +1,4 @@
-import { Stack, Pivot, PivotItem } from "@fluentui/react";
+import { Stack, Pivot, PivotItem, IconButton } from "@fluentui/react";
 import { useTranslation } from "react-i18next";
 import styles from "./AnalysisPanel.module.css";
 
@@ -19,11 +19,12 @@ interface Props {
     activeCitation: string | undefined;
     citationHeight: string;
     answer: ChatAppResponse;
+    onClose?: () => void;
 }
 
 const pivotItemDisabledStyle = { disabled: true, style: { color: "grey" } };
 
-export const AnalysisPanel = ({ answer, activeTab, activeCitation, citationHeight, className, onActiveTabChanged }: Props) => {
+export const AnalysisPanel = ({ answer, activeTab, activeCitation, citationHeight, className, onActiveTabChanged, onClose }: Props) => {
     const isDisabledThoughtProcessTab: boolean = !answer.context.thoughts;
     const isDisabledSupportingContentTab: boolean = !answer.context.data_points;
     const isDisabledCitationTab: boolean = !activeCitation;
@@ -72,32 +73,50 @@ export const AnalysisPanel = ({ answer, activeTab, activeCitation, citationHeigh
     };
 
     return (
-        <Pivot
-            className={className}
-            selectedKey={activeTab}
-            onLinkClick={pivotItem => pivotItem && onActiveTabChanged(pivotItem.props.itemKey! as AnalysisPanelTabs)}
-        >
-            <PivotItem
-                itemKey={AnalysisPanelTabs.ThoughtProcessTab}
-                headerText={t("headerTexts.thoughtProcess")}
-                headerButtonProps={isDisabledThoughtProcessTab ? pivotItemDisabledStyle : undefined}
-            >
-                <ThoughtProcess thoughts={answer.context.thoughts || []} />
-            </PivotItem>
-            <PivotItem
-                itemKey={AnalysisPanelTabs.SupportingContentTab}
-                headerText={t("headerTexts.supportingContent")}
-                headerButtonProps={isDisabledSupportingContentTab ? pivotItemDisabledStyle : undefined}
-            >
-                <SupportingContent supportingContent={answer.context.data_points} />
-            </PivotItem>
-            <PivotItem
-                itemKey={AnalysisPanelTabs.CitationTab}
-                headerText={t("headerTexts.citation")}
-                headerButtonProps={isDisabledCitationTab ? pivotItemDisabledStyle : undefined}
-            >
-                {renderFileViewer()}
-            </PivotItem>
-        </Pivot>
+        <div className={className}>
+            <Stack horizontal horizontalAlign="space-between" verticalAlign="center" style={{ marginBottom: 8 }}>
+                <div style={{ flex: 1 }}>
+                    <Pivot
+                        selectedKey={activeTab}
+                        onLinkClick={pivotItem => pivotItem && onActiveTabChanged(pivotItem.props.itemKey! as AnalysisPanelTabs)}
+                        headersOnly={true}
+                    >
+                        <PivotItem
+                            itemKey={AnalysisPanelTabs.ThoughtProcessTab}
+                            headerText={t("headerTexts.thoughtProcess")}
+                            headerButtonProps={isDisabledThoughtProcessTab ? pivotItemDisabledStyle : undefined}
+                        />
+                        <PivotItem
+                            itemKey={AnalysisPanelTabs.SupportingContentTab}
+                            headerText={t("headerTexts.supportingContent")}
+                            headerButtonProps={isDisabledSupportingContentTab ? pivotItemDisabledStyle : undefined}
+                        />
+                        <PivotItem
+                            itemKey={AnalysisPanelTabs.CitationTab}
+                            headerText={t("headerTexts.citation")}
+                            headerButtonProps={isDisabledCitationTab ? pivotItemDisabledStyle : undefined}
+                        />
+                    </Pivot>
+                </div>
+                {onClose && (
+                    <IconButton
+                        iconProps={{ iconName: "Cancel" }}
+                        title={t("labels.closeButton")}
+                        ariaLabel={t("labels.closeButton")}
+                        onClick={onClose}
+                        styles={{ root: { color: "#424242" } }}
+                    />
+                )}
+            </Stack>
+            <div>
+                {activeTab === AnalysisPanelTabs.ThoughtProcessTab && (
+                    <ThoughtProcess thoughts={answer.context.thoughts || []} />
+                )}
+                {activeTab === AnalysisPanelTabs.SupportingContentTab && (
+                    <SupportingContent supportingContent={answer.context.data_points} />
+                )}
+                {activeTab === AnalysisPanelTabs.CitationTab && renderFileViewer()}
+            </div>
+        </div>
     );
 };

@@ -265,7 +265,7 @@ const Chat = () => {
                 const parsedResponse: ChatAppResponse = await handleAsyncRequest(question, answers, response.body);
                 setAnswers([...answers, [question, parsedResponse]]);
                 // Store in history using current session ID
-                const token = client ? await getToken(client) : undefined;
+                    const token = client ? await getToken(client) : undefined;
                 historyManager.addItem(currentSessionId, [...answers, [question, parsedResponse]], token);
             } else {
                 const parsedResponse: ChatAppResponseOrError = await response.json();
@@ -274,7 +274,7 @@ const Chat = () => {
                 }
                 setAnswers([...answers, [question, parsedResponse as ChatAppResponse]]);
                 // Store in history using current session ID
-                const token = client ? await getToken(client) : undefined;
+                    const token = client ? await getToken(client) : undefined;
                 historyManager.addItem(currentSessionId, [...answers, [question, parsedResponse as ChatAppResponse]], token);
             }
             setSpeechUrls([...speechUrls, null]);
@@ -297,6 +297,37 @@ const Chat = () => {
         setIsStreaming(false);
         // Start a new session when chat is cleared
         setCurrentSessionId(generateSessionId());
+    };
+
+    const clearHistory = async () => {
+        // Clear all chat history from the current provider
+        try {
+            const token = client ? await getToken(client) : undefined;
+            
+            // Get all history items first
+            historyManager.resetContinuationToken();
+            let hasMore = true;
+            const allItems = [];
+            
+            while (hasMore) {
+                const items = await historyManager.getNextItems(100, token);
+                if (items.length === 0) {
+                    hasMore = false;
+                } else {
+                    allItems.push(...items);
+                }
+            }
+            
+            // Delete all items
+            for (const item of allItems) {
+                await historyManager.deleteItem(item.id, token);
+            }
+            
+            // Reset the continuation token after clearing
+            historyManager.resetContinuationToken();
+        } catch (error) {
+            console.error("Error clearing history:", error);
+        }
     };
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
@@ -427,7 +458,8 @@ const Chat = () => {
                         <div className={styles.chatEmptyState}>
                             <img src={appLogo} alt="App logo" className={styles.appLogo} />
 
-                            <h3 className={styles.chatEmptyStateSubtitle}>your friendly guide to security related queries</h3>
+                            <h3 className={styles.chatEmptyStateSubtitle} style={{ fontWeight: 'bold', fontSize: '1.3em' }}>AI Assistant for CyberSecurity Policies and Standards</h3>
+                            <p className={styles.chatEmptyStateDescription}>This chatbot is configured to answer your questions related to Point32Health's Cybersecurity Policies and Standards</p>
                         </div>
                     ) : (
                         <div className={styles.chatMessageStream}>
@@ -500,6 +532,8 @@ const Chat = () => {
                             disabled={isLoading}
                             onSend={question => makeApiRequest(question)}
                             showSpeechInput={showSpeechInput}
+                            onNewChat={clearChat}
+                            onClearHistory={clearHistory}
                         />
                     </div>
                 </div>
@@ -512,6 +546,7 @@ const Chat = () => {
                         citationHeight="810px"
                         answer={answers[selectedAnswer][1]}
                         activeTab={activeAnalysisPanelTab}
+                        onClose={() => setActiveAnalysisPanelTab(undefined)}
                     />
                 )}
 

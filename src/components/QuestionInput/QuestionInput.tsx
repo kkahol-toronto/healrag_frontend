@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import { Stack, TextField } from "@fluentui/react";
 import { Button, Tooltip } from "@fluentui/react-components";
-import { Send28Filled } from "@fluentui/react-icons";
+import { Send28Filled, Add24Regular, Broom24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./QuestionInput.module.css";
@@ -16,9 +16,11 @@ interface Props {
     placeholder?: string;
     clearOnSend?: boolean;
     showSpeechInput?: boolean;
+    onNewChat?: () => void;
+    onClearHistory?: () => void;
 }
 
-export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, initQuestion, showSpeechInput }: Props) => {
+export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, initQuestion, showSpeechInput, onNewChat, onClearHistory }: Props) => {
     const [question, setQuestion] = useState<string>("");
     const { loggedIn } = useContext(LoginContext);
     const { t } = useTranslation();
@@ -73,6 +75,18 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, init
 
     return (
         <Stack horizontal className={styles.questionInputContainer}>
+            <div className={styles.questionInputLeftIcons}>
+                {onNewChat && (
+                    <Tooltip content="New Chat" relationship="label">
+                        <Button size="medium" icon={<Add24Regular />} disabled={disabled} onClick={onNewChat} />
+                    </Tooltip>
+                )}
+                {onClearHistory && (
+                    <Tooltip content="Clear History" relationship="label">
+                        <Button size="medium" icon={<Broom24Regular />} disabled={disabled} onClick={onClearHistory} />
+                    </Tooltip>
+                )}
+            </div>
             <TextField
                 className={styles.questionInputTextArea}
                 disabled={disableRequiredAccessControl}

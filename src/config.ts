@@ -31,6 +31,13 @@ export const config = {
     REQUEST_TIMEOUT: 30000, // 30 seconds
     RETRY_ATTEMPTS: 3,
     
+    // Azure Storage Configuration
+    AZURE_STORAGE: {
+        ACCOUNT_NAME: import.meta.env.VITE_AZURE_STORAGE_ACCOUNT_NAME,
+        CONTAINER_NAME: import.meta.env.VITE_AZURE_CONTAINER_NAME,
+        MD_FILES_FOLDER: "md_files"
+    },
+    
     // Feature Flags
     FEATURES: {
         CHAT_HISTORY: true,

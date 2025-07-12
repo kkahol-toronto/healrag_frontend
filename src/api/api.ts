@@ -23,6 +23,7 @@ import {
     Thoughts
 } from "./models";
 import { useLogin, getToken, isUsingAppServicesLogin } from "../authConfig";
+// Removed Azure Storage library - will use backend endpoint for SAS URL generation
 
 // Session management
 let currentSessionId: string | null = null;
@@ -323,6 +324,8 @@ export async function chatApi(request: ChatAppRequest, shouldStream: boolean, id
                 let sources: any[] = [];
                 let metadata: any = {};
                 
+                console.log('🔍 Starting stream processing with empty sources array');
+                
                 try {
                     while (true) {
                         const { done, value } = await reader.read();
@@ -336,6 +339,7 @@ export async function chatApi(request: ChatAppRequest, shouldStream: boolean, id
                             if (line.startsWith('data: ')) {
                                 try {
                                     const chunk = JSON.parse(line.slice(6));
+                                    console.log('🔍 RECEIVED STREAMING CHUNK:', chunk);
                                     
                                     // Transform HEALRAG chunk format to expected format
                                     if (chunk.type === 'chunk' && chunk.content) {
@@ -349,9 +353,38 @@ export async function chatApi(request: ChatAppRequest, shouldStream: boolean, id
                                         // Sources data
                                         sources = chunk.sources;
                                         console.log('🔍 Streaming Sources received:', sources);
+                                    } else if (chunk.sources && Array.isArray(chunk.sources)) {
+                                        // Sources data in different format
+                                        sources = chunk.sources;
+                                        console.log('🔍 Streaming Sources received (alt format):', sources);
+                                        console.log('🔍 Source filenames:', sources.map(s => s.source || s.title || s.chunk_id));
+                                    } else if (chunk.type === 'retrieval_complete' && chunk.sources) {
+                                        // Handle retrieval_complete chunk type
+                                        sources = chunk.sources;
+                                        console.log('🔍 Sources from retrieval_complete:', sources);
+                                    } else if (chunk.type === 'context_ready' && chunk.sources) {
+                                        // Handle context_ready chunk type  
+                                        sources = chunk.sources;
+                                        console.log('🔍 Sources from context_ready:', sources);
                                     } else if (chunk.type === 'complete') {
                                         // Final context data
                                         metadata = chunk.metadata || {};
+                                        
+                                        // Check if sources are included in the complete chunk
+                                        if (chunk.sources && Array.isArray(chunk.sources) && sources.length === 0) {
+                                            sources = chunk.sources;
+                                            console.log('🔍 Sources found in complete chunk:', sources);
+                                        }
+                                        
+                                        // Log the complete chunk structure for debugging
+                                        console.log('🔍 Complete chunk structure:', {
+                                            type: chunk.type,
+                                            has_sources: !!chunk.sources,
+                                            sources_length: chunk.sources?.length || 0,
+                                            sources_preview: chunk.sources?.slice(0, 2),
+                                            current_sources_length: sources.length
+                                        });
+                                        console.log('🔍 Complete chunk full object:', JSON.stringify(chunk, null, 2));
                                         
                                         const thoughts = [{
                                             title: "Search Results",
@@ -359,13 +392,49 @@ export async function chatApi(request: ChatAppRequest, shouldStream: boolean, id
                                         }];
 
                                         // Format sources properly for SupportingContent component
+                                        console.log('🔍 Raw sources before formatting:');
+                                        sources.forEach((source, index) => {
+                                            const keys = Object.keys(source);
+                                            console.log(`  Source ${index}:`, {
+                                                keys: keys,
+                                                title: source.title,
+                                                source: source.source,
+                                                chunk_id: source.chunk_id,
+                                                content_preview: source.content?.substring(0, 100) + '...'
+                                            });
+                                            
+                                            // Log all key-value pairs to see what's actually available
+                                            console.log(`  All fields for Source ${index}:`);
+                                            keys.forEach(key => {
+                                                console.log(`    ${key}:`, source[key]);
+                                            });
+                                        });
+                                        
                                         const dataPoints = sources.map(source => {
-                                            const title = source.title || source.source || source.chunk_id || 'Document';
+                                            // Use the actual source filename for citation matching
+                                            let sourceFile = source.source || source.title || source.chunk_id;
+                                            
+                                            // Check if source_file field contains the filename
+                                            if (!sourceFile && source.source_file) {
+                                                // Extract filename from path like "md_files/Cyber & Information Security Policy.md"
+                                                const parts = source.source_file.split('/');
+                                                sourceFile = parts[parts.length - 1]; // Get last part (filename)
+                                            }
+                                            
+                                            // Fallback to 'Document' if still no filename
+                                            sourceFile = sourceFile || 'Document';
+                                            
+                                            console.log(`🔍 Extracted filename for citation: "${sourceFile}" from source_file: "${source.source_file}"`);
+                                            
                                             const content = source.content?.substring(0, 300) || source.text?.substring(0, 300) || '';
-                                            return `${title}: ${content}${content.length >= 300 ? '...' : ''}`;
+                                            // Format as: "filename: content..." for proper citation parsing
+                                            return `${sourceFile}: ${content}${content.length >= 300 ? '...' : ''}`;
                                         });
 
-                                        console.log('🔍 Streaming Formatted Data Points:', dataPoints);
+                                        console.log('🔍 Streaming Formatted Data Points:');
+                                        dataPoints.forEach((dataPoint, index) => {
+                                            console.log(`  Data Point ${index}:`, dataPoint);
+                                        });
 
                                         const context = {
                                             data_points: dataPoints,
@@ -382,6 +451,14 @@ export async function chatApi(request: ChatAppRequest, shouldStream: boolean, id
                                         // Error chunk
                                         const errorChunk = { error: chunk.error };
                                         controller.enqueue(new TextEncoder().encode(JSON.stringify(errorChunk) + '\n'));
+                                    } else {
+                                        // Check if any unhandled chunk has sources
+                                        if (chunk.sources && Array.isArray(chunk.sources) && sources.length === 0) {
+                                            sources = chunk.sources;
+                                            console.log('🔍 Sources found in unhandled chunk type:', chunk.type, sources);
+                                        }
+                                        // Log unhandled chunk types for debugging
+                                        console.log('🔍 Unhandled chunk type:', chunk.type, 'has_sources:', !!chunk.sources);
                                     }
                                 } catch (parseError) {
                                     console.warn('Failed to parse streaming chunk:', parseError);
@@ -394,6 +471,15 @@ export async function chatApi(request: ChatAppRequest, shouldStream: boolean, id
                     const errorChunk = { error: error instanceof Error ? error.message : String(error) };
                     controller.enqueue(new TextEncoder().encode(JSON.stringify(errorChunk) + '\n'));
                 } finally {
+                    console.log('🔍 Final sources array before closing stream:');
+                    console.log('  Total sources:', sources.length);
+                    sources.forEach((source, index) => {
+                        console.log(`  Final Source ${index}:`, {
+                            source: source.source,
+                            title: source.title,
+                            chunk_id: source.chunk_id
+                        });
+                    });
                     controller.close();
                 }
             }
@@ -419,9 +505,22 @@ export async function chatApi(request: ChatAppRequest, shouldStream: boolean, id
 
         // Format sources properly for SupportingContent component
         const dataPoints = ragResponse.sources.map(source => {
-            const title = source.title || source.source || source.chunk_id || 'Document';
+            // Use the actual source filename for citation matching
+            let sourceFile = source.source || source.title || source.chunk_id;
+            
+            // Check if source_file field contains the filename
+            if (!sourceFile && source.source_file) {
+                // Extract filename from path like "md_files/Cyber & Information Security Policy.md"
+                const parts = source.source_file.split('/');
+                sourceFile = parts[parts.length - 1]; // Get last part (filename)
+            }
+            
+            // Fallback to 'Document' if still no filename
+            sourceFile = sourceFile || 'Document';
+            
             const content = source.content?.substring(0, 300) || source.text?.substring(0, 300) || '';
-            return `${title}: ${content}${content.length >= 300 ? '...' : ''}`;
+            // Format as: "filename: content..." for proper citation parsing
+            return `${sourceFile}: ${content}${content.length >= 300 ? '...' : ''}`;
         });
 
         console.log('🔍 RAG Response Sources:', ragResponse.sources);
@@ -467,8 +566,8 @@ export async function getChatHistoryListApi(count: number, continuationToken: st
         const title = `Chat - ${timeStr}`;
         
         return {
-            id: session.sessionID,
-            entra_oid: session.user_info?.user_id || '',
+        id: session.sessionID,
+        entra_oid: session.user_info?.user_id || '',
             title: title,
             timestamp: sessionDate.getTime()
         };
@@ -525,9 +624,8 @@ export async function deleteChatHistoryApi(id: string, idToken: string): Promise
 
 // Utility functions
 export function getCitationFilePath(citation: string): string {
-    // For HEALRAG, citations might be handled differently
-    // This might need to be updated based on how your backend serves documents
-    return `${BACKEND_URI}/content/${citation}`;
+    // Use backend proxy to serve citation files from blob storage
+    return `${BACKEND_URI}/citation/${encodeURIComponent(citation)}`;
 }
 
 // File upload (if supported by backend in the future)

@@ -25,13 +25,20 @@
     text-decoration: none;
 }
 
+.headerIcon {
+    height: 2rem;
+    width: 2rem;
+    margin-right: 0.5rem;
+    object-fit: contain;
+}
+
 .headerLogo {
     height: 2rem;
     width: auto;
 }
 
 .headerTitle {
-    margin-left: 0.5rem;
+    margin-left: 0;
     font-weight: 600;
 }
 
