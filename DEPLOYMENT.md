@@ -321,4 +321,4 @@ If you encounter issues:
 2. Review browser console errors
 3. Check Azure portal logs
 4. Verify all configuration values match
-5. Test individual components (auth, API, etc.) 
+5. Test individual components (auth, API, etc.) # Deployment Fri Jul 11 22:50:42 EDT 2025
