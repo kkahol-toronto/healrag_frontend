@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "HEALRAG Security Assistant Frontend - React TypeScript application for RAG-based chat interface",
+  "description": "Intelligent Code Generator Frontend - React TypeScript application for AI-powered code generation",
   "engines": {
     "node": ">=20.0.0"
   },
@@ -60,12 +60,11 @@
     "url": "."
   },
   "keywords": [
-    "healrag",
-    "rag",
-    "chat",
+    "intelligent",
+    "code",
+    "generator",
     "ai",
-    "azure",
-    "security",
+    "chat",
     "frontend",
     "react",
     "typescript"

@@ -4,7 +4,7 @@ export const config = {
     BACKEND_URL: import.meta.env.VITE_HEALRAG_BACKEND_URL || "https://healrag-security.azurewebsites.net",
     
     // Application Settings
-    APP_TITLE: import.meta.env.VITE_APP_TITLE || "HEALRAG Security Assistant",
+    APP_TITLE: import.meta.env.VITE_APP_TITLE || "Intelligent Code Generator",
     VERSION: "1.0.0",
     
     // Session Management

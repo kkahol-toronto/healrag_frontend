@@ -6,7 +6,7 @@ import styles from "./Layout.module.css";
 import { useLogin } from "../../authConfig";
 
 import { LoginButton } from "../../components/LoginButton";
-import p32Icon from "../../p32icon.jpg";
+import p32Icon from "../../p32icon.png";
 
 
 const Layout = () => {
