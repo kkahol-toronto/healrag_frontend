@@ -458,8 +458,8 @@ const Chat = () => {
                         <div className={styles.chatEmptyState}>
                             <img src={appLogo} alt="App logo" className={styles.appLogo} />
 
-                            <h3 className={styles.chatEmptyStateSubtitle} style={{ fontWeight: 'bold', fontSize: '1.3em' }}>NTT Code Generator</h3>
-                            <p className={styles.chatEmptyStateDescription}>This chatbot is configured to help you generate intelligent code solutions</p>
+                            <h3 className={styles.chatEmptyStateSubtitle} style={{ fontWeight: 'bold', fontSize: '1.3em' }}>Siemens NX Code Generator</h3>
+                            <p className={styles.chatEmptyStateDescription}>This chatbot is configured to help you generate intelligent Siemens NX code solutions</p>
                         </div>
                     ) : (
                         <div className={styles.chatMessageStream}>

@@ -4,7 +4,7 @@ export const config = {
     BACKEND_URL: import.meta.env.VITE_HEALRAG_BACKEND_URL || "https://nttcodegenerator.azurewebsites.net",
     
     // Application Settings
-    APP_TITLE: import.meta.env.VITE_APP_TITLE || "NTT Code Generator",
+    APP_TITLE: import.meta.env.VITE_APP_TITLE || "Siemens NX Code Generator",
     VERSION: "1.0.0",
     
     // Session Management
