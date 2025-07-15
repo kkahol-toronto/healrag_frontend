@@ -2,7 +2,7 @@
 
 import { IPublicClientApplication } from "@azure/msal-browser";
 
-const BACKEND_URI = import.meta.env.VITE_HEALRAG_BACKEND_URL || "https://nttcodegenerator.azurewebsites.net";
+const BACKEND_URI = (import.meta.env.VITE_HEALRAG_BACKEND_URL || "https://nttcodegenerator.azurewebsites.net").replace(/\/$/, '');
 
 interface HealragAuthConfig {
     useLogin: boolean;
@@ -215,6 +215,7 @@ const pollForAuthSuccess = async (): Promise<boolean> => {
             return true;
         } else {
             console.log('❌ Auth polling failed:', response.status, response.statusText);
+            // Don't automatically redirect - let the user click login button
         }
     } catch (error) {
         console.error('❌ Error checking auth status:', error);
@@ -226,7 +227,7 @@ const pollForAuthSuccess = async (): Promise<boolean> => {
  * Initialize authentication system
  * Should be called when the app starts
  */
-export const initializeAuth = async (): Promise<void> => {
+export const initializeAuth = async (): Promise<boolean> => {
     console.log('🚀 Initializing authentication system...');
     
     // Check if we're returning from authentication via URL parameters
@@ -237,7 +238,11 @@ export const initializeAuth = async (): Promise<void> => {
     // If no URL token found, check if we have session-based auth
     if (!callbackHandled) {
         console.log('🚀 No callback token found, checking session auth...');
-        await pollForAuthSuccess();
+        const sessionAuth = await pollForAuthSuccess();
+        if (sessionAuth) {
+            console.log('✅ Session authentication successful');
+            return true;
+        }
     }
     
     // If we have a token, try to validate it
@@ -253,6 +258,7 @@ export const initializeAuth = async (): Promise<void> => {
             if (!response.ok) {
                 // Token is invalid, clear it
                 clearStoredToken();
+                return false;
             } else {
                 const userInfo = await response.json();
                 // Update stored token with fresh user info
@@ -262,12 +268,17 @@ export const initializeAuth = async (): Promise<void> => {
                               Math.floor((storedToken.expires_at - Date.now()) / 1000), 
                               userInfo);
                 }
+                return true;
             }
         } catch (error) {
             console.error('Error validating token:', error);
             clearStoredToken();
+            return false;
         }
     }
+    
+    // Check if we have any valid token
+    return await checkLoggedIn();
 };
 
 /**

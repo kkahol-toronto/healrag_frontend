@@ -1,5 +1,5 @@
 // HEALRAG Backend API Integration
-const BACKEND_URI = import.meta.env.VITE_HEALRAG_BACKEND_URL || "https://nttcodegenerator.azurewebsites.net";
+const BACKEND_URI = (import.meta.env.VITE_HEALRAG_BACKEND_URL || "https://nttcodegenerator.azurewebsites.net").replace(/\/$/, '');
 
 import { 
     RAGRequest, 
@@ -50,6 +50,7 @@ export async function getHeaders(idToken: string | undefined): Promise<Record<st
     };
     
     // If using login and we have a token, add it as Authorization header
+    // For session-authenticated users, we rely on cookies instead of Bearer token
     if (useLogin && idToken && idToken !== 'session-authenticated') {
         headers["Authorization"] = `Bearer ${idToken}`;
     }
@@ -218,23 +219,53 @@ export async function getSessionHistoryApi(sessionId: string, limit: number = 50
 
 export async function getUserSessionsApi(limit: number = 50, idToken: string): Promise<UserSessionsResponse> {
     const headers = await getHeaders(idToken);
-    const sessionId = getCurrentSessionId();
     
-    const response = await fetch(`${BACKEND_URI}/sessions/history`, {
-        method: "POST",
+    // Try to get user sessions from the correct endpoint
+    const response = await fetch(`${BACKEND_URI}/sessions`, {
+        method: "GET",
         headers: {
             ...headers,
             "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            session_id: sessionId,
-            limit: limit,
-            include_metadata: true
-        })
+        }
     });
 
     if (!response.ok) {
-        throw new Error(`Getting user sessions failed: ${response.statusText}`);
+        // If the sessions endpoint doesn't exist, try the history endpoint with a different approach
+        console.warn("Sessions endpoint not found, trying alternative approach");
+        const historyResponse = await fetch(`${BACKEND_URI}/sessions/history`, {
+            method: "POST",
+            headers: {
+                ...headers,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                session_id: "all", // Try to get all sessions
+                limit: limit,
+                include_metadata: true
+            })
+        });
+
+        if (!historyResponse.ok) {
+            throw new Error(`Getting user sessions failed: ${historyResponse.statusText}`);
+        }
+
+        const historyData = await historyResponse.json();
+        
+        // If we get session history data, convert it to user sessions format
+        if (historyData.success && historyData.session_id) {
+            return {
+                success: true,
+                sessions: [{
+                    sessionID: historyData.session_id,
+                    created_at: new Date().toISOString(),
+                    last_interaction: new Date().toISOString(),
+                    user_info: { user_id: 'current_user' }
+                }],
+                total_count: 1
+            } as UserSessionsResponse;
+        }
+        
+        throw new Error(`Getting user sessions failed: ${historyResponse.statusText}`);
     }
 
     return (await response.json()) as UserSessionsResponse;
@@ -565,6 +596,15 @@ export async function getChatHistoryListApi(count: number, continuationToken: st
         throw new Error("Failed to get user sessions");
     }
 
+    // Add null checking for sessions array
+    if (!userSessions.sessions || !Array.isArray(userSessions.sessions)) {
+        console.warn("No sessions found or invalid sessions data:", userSessions);
+        return {
+            sessions: [],
+            continuation_token: undefined
+        };
+    }
+
     // Convert to legacy format with better titles
     const sessions = userSessions.sessions.map(session => {
         // Create a more descriptive title
@@ -591,6 +631,16 @@ export async function getChatHistoryApi(id: string, idToken: string): Promise<{ 
     
     if (!history.success) {
         throw new Error("Failed to get session history");
+    }
+
+    // Add null checking for interactions array
+    if (!history.interactions || !Array.isArray(history.interactions)) {
+        console.warn("No interactions found or invalid interactions data:", history);
+        return {
+            id: history.session_id || id,
+            entra_oid: '',
+            answers: []
+        };
     }
 
     // Convert HEALRAG interaction format to expected chat format

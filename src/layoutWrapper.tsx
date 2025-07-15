@@ -27,9 +27,9 @@ const LayoutWrapper = () => {
         useEffect(() => {
             const fetchLoggedIn = async () => {
                 // Initialize HEALRAG authentication
-                await initializeAuth();
-                // Check final authentication status
-                setLoggedIn(await checkLoggedIn(msalInstance));
+                const isLoggedIn = await initializeAuth();
+                setLoggedIn(isLoggedIn);
+                console.log('🔐 Authentication status updated:', isLoggedIn);
             };
 
             fetchLoggedIn();
@@ -51,9 +51,9 @@ const LayoutWrapper = () => {
         useEffect(() => {
             const fetchLoggedIn = async () => {
                 // Initialize HEALRAG authentication even without MSAL
-                await initializeAuth();
-                // Check final authentication status
-                setLoggedIn(await checkLoggedIn());
+                const isLoggedIn = await initializeAuth();
+                setLoggedIn(isLoggedIn);
+                console.log('🔐 Authentication status updated:', isLoggedIn);
             };
 
             fetchLoggedIn();

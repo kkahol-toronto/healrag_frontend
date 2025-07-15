@@ -15,7 +15,7 @@ import i18next from "./i18n/config";
 window.React = React;
 
 // Debug log to verify deployment
-console.log("🚀 HEALRAG App loading - Build timestamp:", new Date().toISOString());
+console.log("🚀 NTT Code Generator App loading - Build timestamp:", new Date().toISOString());
 
 initializeIcons();
 
