@@ -1,5 +1,5 @@
 // HEALRAG Backend API Integration
-const BACKEND_URI = import.meta.env.VITE_HEALRAG_BACKEND_URL || "http://localhost:8000";
+const BACKEND_URI = import.meta.env.VITE_HEALRAG_BACKEND_URL || "https://nttcodegenerator.azurewebsites.net";
 
 import { 
     RAGRequest, 
@@ -218,12 +218,19 @@ export async function getSessionHistoryApi(sessionId: string, limit: number = 50
 
 export async function getUserSessionsApi(limit: number = 50, idToken: string): Promise<UserSessionsResponse> {
     const headers = await getHeaders(idToken);
-    const url = new URL(`${BACKEND_URI}/sessions/user`);
-    url.searchParams.append('limit', limit.toString());
-
-    const response = await fetch(url.toString(), {
-        method: "GET",
-        headers
+    const sessionId = getCurrentSessionId();
+    
+    const response = await fetch(`${BACKEND_URI}/sessions/history`, {
+        method: "POST",
+        headers: {
+            ...headers,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            session_id: sessionId,
+            limit: limit,
+            include_metadata: true
+        })
     });
 
     if (!response.ok) {

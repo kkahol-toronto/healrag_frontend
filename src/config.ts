@@ -1,10 +1,10 @@
 // HEALRAG Frontend Configuration
 export const config = {
     // Backend Configuration
-    BACKEND_URL: import.meta.env.VITE_HEALRAG_BACKEND_URL || "https://healrag-security.azurewebsites.net",
+    BACKEND_URL: import.meta.env.VITE_HEALRAG_BACKEND_URL || "https://nttcodegenerator.azurewebsites.net",
     
     // Application Settings
-    APP_TITLE: import.meta.env.VITE_APP_TITLE || "Intelligent Code Generator",
+    APP_TITLE: import.meta.env.VITE_APP_TITLE || "NTT Code Generator",
     VERSION: "1.0.0",
     
     // Session Management

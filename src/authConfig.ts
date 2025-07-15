@@ -2,7 +2,7 @@
 
 import { IPublicClientApplication } from "@azure/msal-browser";
 
-const BACKEND_URI = import.meta.env.VITE_HEALRAG_BACKEND_URL || "http://localhost:8000";
+const BACKEND_URI = import.meta.env.VITE_HEALRAG_BACKEND_URL || "https://nttcodegenerator.azurewebsites.net";
 
 interface HealragAuthConfig {
     useLogin: boolean;

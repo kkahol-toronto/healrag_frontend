@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Intelligent Code Generator Frontend - React TypeScript application for AI-powered code generation",
+  "description": "NTT Code Generator Frontend - React TypeScript application for intelligent code generation",
   "engines": {
     "node": ">=20.0.0"
   },
