@@ -43,16 +43,54 @@ export const Answer = ({
     const [copied, setCopied] = useState(false);
 
     const handleCopy = () => {
-        // Single replace to remove all HTML tags to remove the citations
-        const textToCopy = sanitizedAnswerHtml.replace(/<a [^>]*><sup>\d+<\/sup><\/a>|<[^>]+>/g, "");
+        try {
+            // Get the text content from the markdown component
+            const answerElement = document.querySelector(`.${styles.answerText}`);
+            if (answerElement) {
+                const textToCopy = answerElement.textContent || (answerElement as HTMLElement).innerText || "";
+                
+                if (navigator.clipboard && window.isSecureContext) {
+                    // Use modern clipboard API
+                    navigator.clipboard
+                        .writeText(textToCopy)
+                        .then(() => {
+                            setCopied(true);
+                            setTimeout(() => setCopied(false), 2000);
+                        })
+                        .catch(err => {
+                            console.error("Failed to copy text: ", err);
+                            // Fallback to old method
+                            fallbackCopyTextToClipboard(textToCopy);
+                        });
+                } else {
+                    // Fallback for older browsers or non-secure contexts
+                    fallbackCopyTextToClipboard(textToCopy);
+                }
+            }
+        } catch (err) {
+            console.error("Error in handleCopy: ", err);
+        }
+    };
 
-        navigator.clipboard
-            .writeText(textToCopy)
-            .then(() => {
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-            })
-            .catch(err => console.error("Failed to copy text: ", err));
+    const fallbackCopyTextToClipboard = (text: string) => {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+            document.execCommand('copy');
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            console.error("Fallback copy failed: ", err);
+        }
+        
+        document.body.removeChild(textArea);
     };
 
     return (
