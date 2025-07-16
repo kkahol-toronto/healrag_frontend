@@ -558,20 +558,34 @@ export async function getChatHistoryListApi(count: number, continuationToken: st
         throw new Error("Failed to get user sessions");
     }
 
-    // Convert to legacy format with better titles
-    const sessions = userSessions.sessions.map(session => {
+    // Convert to legacy format with better titles including first query
+    const sessions = await Promise.all(userSessions.sessions.map(async session => {
+        // Get the first query for this session
+        let firstQuery = "";
+        try {
+            const history = await getSessionHistoryApi(session.sessionID, 1, idToken);
+            if (history.success && history.interactions.length > 0) {
+                firstQuery = history.interactions[0].query;
+            }
+        } catch (error) {
+            console.warn(`Failed to get first query for session ${session.sessionID}:`, error);
+        }
+        
         // Create a more descriptive title
         const sessionDate = new Date(session.created_at || session.last_interaction || Date.now());
         const timeStr = sessionDate.toLocaleDateString() + ' ' + sessionDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        const title = `Chat - ${timeStr}`;
+        
+        // Truncate first query if it's too long
+        const truncatedQuery = firstQuery.length > 50 ? firstQuery.substring(0, 50) + '...' : firstQuery;
+        const title = firstQuery ? `Chat - ${timeStr} - ${truncatedQuery}` : `Chat - ${timeStr}`;
         
         return {
-        id: session.sessionID,
-        entra_oid: session.user_info?.user_id || '',
+            id: session.sessionID,
+            entra_oid: session.user_info?.user_id || '',
             title: title,
             timestamp: sessionDate.getTime()
         };
-    });
+    }));
 
     return {
         sessions,

@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
-import { Stack, IconButton } from "@fluentui/react";
+import { Stack } from "@fluentui/react";
+import { Button } from "@fluentui/react-components";
+import { Copy24Regular, Checkmark24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import DOMPurify from "dompurify";
 import ReactMarkdown from "react-markdown";
@@ -44,11 +46,10 @@ export const Answer = ({
 
     const handleCopy = () => {
         try {
-            // Get the text content from the markdown component
-            const answerElement = document.querySelector(`.${styles.answerText}`);
-            if (answerElement) {
-                const textToCopy = answerElement.textContent || (answerElement as HTMLElement).innerText || "";
-                
+            // Simple approach: use the raw answer content
+            const textToCopy = answer.message?.content || "";
+            
+            if (textToCopy.trim()) {
                 if (navigator.clipboard && window.isSecureContext) {
                     // Use modern clipboard API
                     navigator.clipboard
@@ -94,17 +95,22 @@ export const Answer = ({
     };
 
     return (
-        <Stack className={`${styles.answerContainer} ${isSelected && styles.selected}`} verticalAlign="space-between">
+        <Stack 
+            className={`${styles.answerContainer} ${isSelected && styles.selected}`} 
+            verticalAlign="space-between"
+            data-answer-index={index}
+        >
             <Stack.Item>
                 <Stack horizontal horizontalAlign="space-between">
                     <AnswerIcon />
                     <div>
-                        <IconButton
-                            style={{ color: "black" }}
-                            iconProps={{ iconName: copied ? "CheckMark" : "Copy" }}
+                        <Button
+                            appearance="transparent"
+                            icon={copied ? <Checkmark24Regular /> : <Copy24Regular />}
                             title={copied ? t("tooltips.copied") : t("tooltips.copy")}
-                            ariaLabel={copied ? t("tooltips.copied") : t("tooltips.copy")}
+                            aria-label={copied ? t("tooltips.copied") : t("tooltips.copy")}
                             onClick={handleCopy}
+                            style={{ color: "black" }}
                         />
                     </div>
                 </Stack>

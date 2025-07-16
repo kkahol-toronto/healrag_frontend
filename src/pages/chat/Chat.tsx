@@ -286,17 +286,23 @@ const Chat = () => {
     };
 
     const clearChat = () => {
-        lastQuestionRef.current = "";
-        error && setError(undefined);
-        setActiveCitation(undefined);
-        setActiveAnalysisPanelTab(undefined);
-        setAnswers([]);
-        setSpeechUrls([]);
-        setStreamedAnswers([]);
-        setIsLoading(false);
-        setIsStreaming(false);
-        // Start a new session when chat is cleared
-        setCurrentSessionId(generateSessionId());
+        console.log("clearChat function called");
+        try {
+            lastQuestionRef.current = "";
+            error && setError(undefined);
+            setActiveCitation(undefined);
+            setActiveAnalysisPanelTab(undefined);
+            setAnswers([]);
+            setSpeechUrls([]);
+            setStreamedAnswers([]);
+            setIsLoading(false);
+            setIsStreaming(false);
+            // Start a new session when chat is cleared
+            setCurrentSessionId(generateSessionId());
+            console.log("Chat cleared successfully");
+        } catch (error) {
+            console.error("Error clearing chat:", error);
+        }
     };
 
     const clearHistory = async () => {

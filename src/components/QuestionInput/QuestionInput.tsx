@@ -24,7 +24,6 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, init
     const [question, setQuestion] = useState<string>("");
     const { loggedIn } = useContext(LoginContext);
     const { t } = useTranslation();
-    const [isComposing, setIsComposing] = useState(false);
 
     useEffect(() => {
         initQuestion && setQuestion(initQuestion);
@@ -43,20 +42,13 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, init
     };
 
     const onEnterPress = (ev: React.KeyboardEvent<Element>) => {
-        if (isComposing) return;
-
         if (ev.key === "Enter" && !ev.shiftKey) {
             ev.preventDefault();
             sendQuestion();
         }
     };
 
-    const handleCompositionStart = () => {
-        setIsComposing(true);
-    };
-    const handleCompositionEnd = () => {
-        setIsComposing(false);
-    };
+    // Removed composition handlers that might interfere with paste
 
     const onQuestionChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
         if (!newValue) {
@@ -77,12 +69,26 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, init
         <Stack horizontal className={styles.questionInputContainer}>
             <div className={styles.questionInputLeftIcons}>
                 {onNewChat && (
-                    <Tooltip content="New Chat" relationship="label">
+                    <Tooltip 
+                        content="New Chat" 
+                        relationship="label"
+                        positioning={{
+                            position: 'below',
+                            offset: { mainAxis: 10 }
+                        }}
+                    >
                         <Button size="medium" icon={<Add24Regular />} disabled={disabled} onClick={onNewChat} />
                     </Tooltip>
                 )}
                 {onClearHistory && (
-                    <Tooltip content="Clear History" relationship="label">
+                    <Tooltip 
+                        content="Clear History" 
+                        relationship="label"
+                        positioning={{
+                            position: 'below',
+                            offset: { mainAxis: 10 }
+                        }}
+                    >
                         <Button size="medium" icon={<Broom24Regular />} disabled={disabled} onClick={onClearHistory} />
                     </Tooltip>
                 )}
@@ -97,8 +103,6 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, init
                 value={question}
                 onChange={onQuestionChange}
                 onKeyDown={onEnterPress}
-                onCompositionStart={handleCompositionStart}
-                onCompositionEnd={handleCompositionEnd}
             />
             <div className={styles.questionInputButtonsContainer}>
                 <Tooltip content={t("tooltips.submitQuestion")} relationship="label">
