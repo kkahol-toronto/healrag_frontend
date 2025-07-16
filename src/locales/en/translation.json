@@ -53,6 +53,14 @@
     "citationWithColon": "Citation:",
     "followupQuestions": "Follow-up questions:",
 
+    "auth": {
+        "loading": "Loading...",
+        "checkingAccess": "Checking access...",
+        "accessDenied": "Access Denied",
+        "noAccessMessage": "Sorry, you do not have access to this tool. Please contact your administrator if you believe this is an error.",
+        "retryLogin": "Try Again"
+    },
+
     "tooltips": {
         "submitQuestion": "Submit question",
         "askWithVoice": "Ask question with voice",

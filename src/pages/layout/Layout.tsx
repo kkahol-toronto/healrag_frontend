@@ -4,8 +4,6 @@ import { useTranslation } from "react-i18next";
 import styles from "./Layout.module.css";
 
 import { useLogin } from "../../authConfig";
-
-import { LoginButton } from "../../components/LoginButton";
 import p32Icon from "../../p32icon.jpg";
 
 
@@ -22,7 +20,7 @@ const Layout = () => {
                     </Link>
 
                     <div className={styles.loginMenuContainer}>
-                        {useLogin && <LoginButton />}
+                        {/* Login button removed - authentication handled by AuthWrapper */}
                     </div>
                 </div>
             </header>
