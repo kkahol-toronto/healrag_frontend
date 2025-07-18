@@ -74,14 +74,17 @@ The frontend integrates with your Azure AD authentication:
 - **Azure AD Authentication** via HEALRAG backend
 - **RAG Chat Interface** with streaming responses
 - **Session Management** with automatic session ID generation
-- **Chat History** stored in CosmoDB via backend
+- **AI-Powered Chat History** with intelligent titles via `/title-summarizer`
+- **Two-Line History Display** with date/time and AI-generated titles
 - **Document Search** through HEALRAG search API
 - **Responsive UI** with Fluent UI components
 - **Multi-language Support** (i18n ready)
+- **Maximum Strictness Mode** for consistent AI responses
 
 ### ⚙️ Backend Integration
 - **RAG Queries**: `/rag/query` and `/rag/stream` endpoints
 - **Session History**: `/sessions/history` and `/sessions/user` endpoints
+- **Title Summarization**: `/title-summarizer` endpoint for AI-powered titles
 - **Authentication**: `/auth/login`, `/auth/callback`, `/auth/me` endpoints
 - **Configuration**: `/config` endpoint for system settings
 
@@ -104,8 +107,11 @@ npm run clean        # Clean build artifacts
 1. **Open**: Navigate to the frontend URL
 2. **Login**: Click "Login" to authenticate via Azure AD
 3. **Chat**: Start asking questions about security policies
-4. **History**: View previous conversations in the sidebar
-5. **Sessions**: Each browser tab creates a new chat session
+4. **History**: View previous conversations with AI-generated titles in the sidebar
+5. **Session Management**: 
+   - Broom icon: Clear current session (keeps history)
+   - Trash icon: Delete specific history entries
+6. **Sessions**: Each browser tab creates a new chat session
 
 ### For Developers:
 1. **Development**: Use `npm run dev` for hot-reload development
@@ -165,6 +171,11 @@ allow_origins=[
     # Add your production frontend URL
 ]
 ```
+
+**Title Summarizer Issues**: 
+- **"Invalid title response"**: Ensure `/title-summarizer` endpoint returns `summary` field
+- **"Failed to generate AI title"**: Check backend logs for title generation errors
+- **Timeout errors**: Backend should respond within 5 seconds
 
 ## 📁 Project Structure
 

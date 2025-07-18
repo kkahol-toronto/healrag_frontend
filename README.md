@@ -8,10 +8,12 @@ This is a React TypeScript frontend application for the HEALRAG (Health Risk Ass
 - **Chat Interface**: Multi-turn conversation support with session history
 - **Document Search**: RAG-powered document retrieval and analysis
 - **Session Management**: Persistent chat history with CosmoDB integration
+- **AI-Powered History Titles**: Intelligent conversation titles using backend summarization
+- **Two-Line History Display**: Date/time and AI-generated titles in clean format
 - **Responsive Design**: Mobile-friendly interface optimized for security workflows
 - **Point32 Branding**: Custom UI with Point32 Health branding
 - **Real-time Streaming**: Streaming responses for better user experience
-- **Temperature Control**: Adjustable AI response creativity settings
+- **Maximum Strictness Mode**: AI responses optimized for accuracy and consistency
 
 ## 🚀 Deployment Setup
 
@@ -145,11 +147,15 @@ npm run format   # Format code with Prettier
 ```
 src/
 ├── api/                 # Backend integration (HEALRAG API)
+│   ├── api.ts          # Core API functions including title summarizer
+│   ├── models.ts       # TypeScript interfaces
+│   └── index.ts        # API exports
 ├── components/
 │   ├── Answer/          # AI response display with citations
-│   ├── HistoryPanel/    # Chat session management
-│   ├── QuestionInput/   # User input with file upload
-│   ├── Settings/        # Temperature and model settings
+│   ├── HistoryPanel/    # Chat session management with AI titles
+│   ├── HistoryItem/     # Individual history entry with two-line display
+│   ├── QuestionInput/   # User input with session clearing
+│   ├── ClearChatButton/ # Chat clearing functionality
 │   └── LoginButton/     # Azure AD authentication
 ├── pages/
 │   ├── chat/           # Main chat interface
@@ -166,8 +172,32 @@ src/
 ### API Integration
 - **Base URL**: Environment-specific (localhost:8000 or Azure backend)
 - **Authentication**: Bearer token from Azure AD
-- **Endpoints**: RAG queries, chat history, document search
+- **Endpoints**: RAG queries, chat history, document search, title summarization
 - **Streaming**: Server-Sent Events for real-time responses
+
+### Conversation History Features
+
+#### AI-Powered Titles
+- **Backend Integration**: Uses `/title-summarizer` endpoint for intelligent titles
+- **4-Word Limit**: Generates concise, meaningful conversation titles
+- **Fallback System**: Falls back to first 4 words of query if AI fails
+- **Caching**: In-memory cache to avoid redundant API calls
+- **Error Handling**: Graceful degradation with timeout protection
+
+#### Two-Line Display Format
+```
+7/18/2025 3:45 PM
+Lost Laptop Recovery Steps
+```
+- **Line 1**: Date and time (gray, smaller font)
+- **Line 2**: AI-generated title (black, bold font)
+- **Responsive Layout**: Optimized for 350px panel width
+
+#### History Management
+- **Last 10 Conversations**: Displays exactly 10 most recent sessions
+- **Session Clearing**: Broom icon clears current session (not server history)
+- **Individual Deletion**: Trash can icon deletes specific history entries
+- **Grouped by Date**: Today, Yesterday, Last 7 days, Last 30 days
 
 ## 🛡️ Security Configuration
 
@@ -231,6 +261,7 @@ Your HEALRAG backend must provide these endpoints:
 - `POST /sessions/history` - Get session history
 - `GET /sessions/user` - Get user sessions
 - `DELETE /sessions/{session_id}` - Delete session
+- `POST /title-summarizer` - Generate AI-powered conversation titles
 
 ### Health Checks
 - `GET /health` - System health status
@@ -259,6 +290,12 @@ Your HEALRAG backend must provide these endpoints:
 - Check GitHub Actions logs
 - Verify all environment variables are set
 - Ensure Node.js version compatibility
+
+**5. Conversation history issues**
+- Verify `/title-summarizer` endpoint is available on backend
+- Check browser console for title generation errors
+- Ensure backend returns `summary` field in title response
+- Verify authentication token is valid for history API calls
 
 ### Debug Steps
 1. Check browser console for JavaScript errors
