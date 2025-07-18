@@ -421,6 +421,14 @@ export async function chatApi(request: ChatAppRequest, shouldStream: boolean, id
                                                 sourceFile = parts[parts.length - 1]; // Get last part (filename)
                                             }
                                             
+                                            // If we have a temporary file path, use the actual file path for citation
+                                            let citationPath = sourceFile;
+                                            if (sourceFile && (sourceFile.includes('/tmp/') || sourceFile.includes('tmpxcjp1fev') || sourceFile.includes('tmpps_set3g'))) {
+                                                // Use the actual file path that the backend can serve
+                                                citationPath = source.source_file || source.source || source.title || 'Document';
+                                                console.log(`🔍 Using actual file path for citation: "${citationPath}" instead of temp path: "${sourceFile}"`);
+                                            }
+                                            
                                             // Fallback to 'Document' if still no filename
                                             sourceFile = sourceFile || 'Document';
                                             
@@ -428,7 +436,9 @@ export async function chatApi(request: ChatAppRequest, shouldStream: boolean, id
                                             
                                             const content = source.content?.substring(0, 300) || source.text?.substring(0, 300) || '';
                                             // Format as: "filename: content..." for proper citation parsing
-                                            return `${sourceFile}: ${content}${content.length >= 300 ? '...' : ''}`;
+                                            // Store the actual file path in a special format for citation lookup
+                                            const citationKey = `${sourceFile}|${citationPath}`;
+                                            return `${citationKey}: ${content}${content.length >= 300 ? '...' : ''}`;
                                         });
 
                                         console.log('🔍 Streaming Formatted Data Points:');
@@ -638,6 +648,14 @@ export async function deleteChatHistoryApi(id: string, idToken: string): Promise
 
 // Utility functions
 export function getCitationFilePath(citation: string): string {
+    // Check if citation contains the special format with actual file path
+    if (citation.includes('|')) {
+        const parts = citation.split('|');
+        const actualFilePath = parts[1]; // Get the actual file path
+        console.log(`🔍 Citation "${citation}" maps to actual file path: "${actualFilePath}"`);
+        return `${BACKEND_URI}/citation/${encodeURIComponent(actualFilePath)}`;
+    }
+    
     // Use backend proxy to serve citation files from blob storage
     return `${BACKEND_URI}/citation/${encodeURIComponent(citation)}`;
 }
