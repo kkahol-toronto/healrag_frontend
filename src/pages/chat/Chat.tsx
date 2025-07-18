@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useContext } from "react";
 import { useTranslation } from "react-i18next";
 import { Helmet } from "react-helmet-async";
-import { Panel, DefaultButton } from "@fluentui/react";
+// Removed DefaultButton import since we removed the settings panel
 import readNDJSONStream from "ndjson-readablestream";
 
 import appLogo from "../../p32h.png";
@@ -30,7 +30,7 @@ import { AnalysisPanel, AnalysisPanelTabs } from "../../components/AnalysisPanel
 import { HistoryPanel } from "../../components/HistoryPanel";
 import { HistoryProviderOptions, useHistoryManager } from "../../components/HistoryProviders";
 import { HistoryButton } from "../../components/HistoryButton";
-import { SettingsButton } from "../../components/SettingsButton";
+// Removed SettingsButton import since we're hiding developer settings
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { UploadFile } from "../../components/UploadFile";
 import { useLogin, getToken, requireAccessControl } from "../../authConfig";
@@ -38,13 +38,13 @@ import { useMsal } from "@azure/msal-react";
 
 import { LoginContext } from "../../loginContext";
 
-import { Settings } from "../../components/Settings/Settings";
+// Removed Settings import since we're hiding developer settings
 
 const Chat = () => {
-    const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
+    // Removed isConfigPanelOpen state since we're hiding developer settings
     const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
     const [promptTemplate, setPromptTemplate] = useState<string>("");
-    const [temperature, setTemperature] = useState<number>(0.3);
+    const [temperature, setTemperature] = useState<number>(0.0); // Set to maximum strictness (0.0)
     const [seed, setSeed] = useState<number | null>(null);
     const [minimumRerankerScore, setMinimumRerankerScore] = useState<number>(0);
     const [minimumSearchScore, setMinimumSearchScore] = useState<number>(0);
@@ -305,36 +305,7 @@ const Chat = () => {
         }
     };
 
-    const clearHistory = async () => {
-        // Clear all chat history from the current provider
-        try {
-            const token = client ? await getToken(client) : undefined;
-            
-            // Get all history items first
-            historyManager.resetContinuationToken();
-            let hasMore = true;
-            const allItems = [];
-            
-            while (hasMore) {
-                const items = await historyManager.getNextItems(100, token);
-                if (items.length === 0) {
-                    hasMore = false;
-                } else {
-                    allItems.push(...items);
-                }
-            }
-            
-            // Delete all items
-            for (const item of allItems) {
-                await historyManager.deleteItem(item.id, token);
-            }
-            
-            // Reset the continuation token after clearing
-            historyManager.resetContinuationToken();
-        } catch (error) {
-            console.error("Error clearing history:", error);
-        }
-    };
+    // Removed clearHistory function since broom now only clears current session
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "auto" }), [streamedAnswers]);
@@ -342,78 +313,7 @@ const Chat = () => {
         getConfig();
     }, []);
 
-    const handleSettingsChange = (field: string, value: any) => {
-        switch (field) {
-            case "promptTemplate":
-                setPromptTemplate(value);
-                break;
-            case "temperature":
-                setTemperature(value);
-                break;
-            case "seed":
-                setSeed(value);
-                break;
-            case "minimumRerankerScore":
-                setMinimumRerankerScore(value);
-                break;
-            case "minimumSearchScore":
-                setMinimumSearchScore(value);
-                break;
-            case "retrieveCount":
-                setRetrieveCount(value);
-                break;
-            case "maxSubqueryCount":
-                setMaxSubqueryCount(value);
-                break;
-            case "resultsMergeStrategy":
-                setResultsMergeStrategy(value);
-                break;
-            case "useSemanticRanker":
-                setUseSemanticRanker(value);
-                break;
-            case "useQueryRewriting":
-                setUseQueryRewriting(value);
-                break;
-            case "reasoningEffort":
-                setReasoningEffort(value);
-                break;
-            case "useSemanticCaptions":
-                setUseSemanticCaptions(value);
-                break;
-            case "excludeCategory":
-                setExcludeCategory(value);
-                break;
-            case "includeCategory":
-                setIncludeCategory(value);
-                break;
-            case "useOidSecurityFilter":
-                setUseOidSecurityFilter(value);
-                break;
-            case "useGroupsSecurityFilter":
-                setUseGroupsSecurityFilter(value);
-                break;
-            case "shouldStream":
-                setShouldStream(value);
-                break;
-            case "useSuggestFollowupQuestions":
-                setUseSuggestFollowupQuestions(value);
-                break;
-            case "useGPT4V":
-                setUseGPT4V(value);
-                break;
-            case "gpt4vInput":
-                setGPT4VInput(value);
-                break;
-            case "vectorFields":
-                setVectorFields(value);
-                break;
-            case "retrievalMode":
-                setRetrievalMode(value);
-                break;
-            case "useAgenticRetrieval":
-                setUseAgenticRetrieval(value);
-        }
-    };
+    // Removed handleSettingsChange function since we removed the settings panel
 
 
 
@@ -455,7 +355,7 @@ const Chat = () => {
                 <div className={styles.commandsContainer}>
                     <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={isLoading} />
                     {showUserUpload && <UploadFile className={styles.commandButton} disabled={!loggedIn} />}
-                    <SettingsButton className={styles.commandButton} onClick={() => setIsConfigPanelOpen(!isConfigPanelOpen)} />
+                    {/* Removed SettingsButton to hide developer settings */}
                 </div>
             </div>
             <div className={styles.chatRoot} style={{ marginLeft: isHistoryPanelOpen ? "300px" : "0" }}>
@@ -539,7 +439,7 @@ const Chat = () => {
                             onSend={question => makeApiRequest(question)}
                             showSpeechInput={showSpeechInput}
                             onNewChat={clearChat}
-                            onClearHistory={clearHistory}
+                            onClearHistory={clearChat}
                         />
                     </div>
                 </div>
@@ -570,20 +470,7 @@ const Chat = () => {
                     />
                 )}
 
-                <Panel
-                    headerText={t("labels.headerText")}
-                    isOpen={isConfigPanelOpen}
-                    isBlocking={false}
-                    onDismiss={() => setIsConfigPanelOpen(false)}
-                    closeButtonAriaLabel={t("labels.closeButton")}
-                    onRenderFooterContent={() => <DefaultButton onClick={() => setIsConfigPanelOpen(false)}>{t("labels.closeButton")}</DefaultButton>}
-                    isFooterAtBottom={true}
-                >
-                    <Settings
-                        temperature={temperature}
-                        onChange={handleSettingsChange}
-                    />
-                </Panel>
+                {/* Removed Settings Panel to hide developer settings */}
             </div>
         </div>
     );

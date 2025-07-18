@@ -27,7 +27,13 @@ export function HistoryItem({ item, onSelect, onDelete }: HistoryItemProps) {
     return (
         <div className={styles.historyItem}>
             <button onClick={() => onSelect(item.id)} className={styles.historyItemButton}>
-                <div className={styles.historyItemTitle}>{item.title}</div>
+                <div className={styles.historyItemTitle}>
+                    {item.title.split('\n').map((line, index) => (
+                        <div key={index} className={index === 0 ? styles.dateTime : styles.titleText}>
+                            {line}
+                        </div>
+                    ))}
+                </div>
             </button>
             <button onClick={() => setIsModalOpen(true)} className={styles.deleteButton} aria-label="delete this chat history">
                 <Delete24Regular className={styles.deleteIcon} />

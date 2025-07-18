@@ -82,7 +82,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, init
                 )}
                 {onClearHistory && (
                     <Tooltip 
-                        content="Clear History" 
+                        content="Clear Current Session" 
                         relationship="label"
                         positioning={{
                             position: 'below',

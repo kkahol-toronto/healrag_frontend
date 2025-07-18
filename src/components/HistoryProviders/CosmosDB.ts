@@ -13,12 +13,9 @@ export class CosmosDBProvider implements IHistoryProvider {
     }
 
     async getNextItems(count: number, idToken?: string): Promise<HistoryMetaData[]> {
-        if (this.isItemEnd) {
-            return [];
-        }
-
+        // Always get exactly 10 conversations, ignore the count parameter
         try {
-            const response = await getChatHistoryListApi(count, this.continuationToken, idToken || "");
+            const response = await getChatHistoryListApi(10, this.continuationToken, idToken || "");
             this.continuationToken = response.continuation_token;
             if (!this.continuationToken) {
                 this.isItemEnd = true;

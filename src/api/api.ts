@@ -562,32 +562,78 @@ export async function chatApi(request: ChatAppRequest, shouldStream: boolean, id
 
 // Legacy chat history compatibility
 export async function getChatHistoryListApi(count: number, continuationToken: string | undefined, idToken: string): Promise<{ sessions: any[]; continuation_token?: string }> {
-    const userSessions = await getUserSessionsApi(count, idToken);
+    // Get last 10 conversations from backend
+    const userSessions = await getUserSessionsApi(10, idToken);
     
     if (!userSessions.success) {
         throw new Error("Failed to get user sessions");
     }
 
-    // Convert to legacy format with better titles including first query
+    // Convert to legacy format with date/time and AI-generated title
     const sessions = await Promise.all(userSessions.sessions.map(async session => {
         // Get the first query for this session
         let firstQuery = "";
+        let aiTitle = "";
         try {
             const history = await getSessionHistoryApi(session.sessionID, 1, idToken);
             if (history.success && history.interactions.length > 0) {
                 firstQuery = history.interactions[0].query;
+                
+                // Generate AI title using the title summarizer endpoint
+                if (firstQuery && firstQuery.trim()) {
+                    try {
+                        console.log(`🔍 Generating AI title for query: "${firstQuery.substring(0, 50)}..."`);
+                        const titleResponse = await titleSummarizerApi(firstQuery, 4, idToken);
+                        
+                        // Check if we got a valid title response
+                        if (titleResponse && titleResponse.title && typeof titleResponse.title === 'string') {
+                            aiTitle = titleResponse.title;
+                            console.log(`✅ Generated AI title: "${aiTitle}" (${aiTitle.split(' ').length} words)`);
+                        } else {
+                            throw new Error('Invalid title response from API');
+                        }
+                    } catch (titleError) {
+                        console.warn(`⚠️ Failed to generate AI title for session ${session.sessionID}:`, titleError);
+                        // Fallback to first 4 words if AI title fails
+                        const words = firstQuery.trim().split(/\s+/);
+                        const firstFourWords = words.slice(0, 4).join(' ');
+                        aiTitle = firstFourWords || "Chat";
+                        console.log(`🔄 Using fallback title: "${aiTitle}" (${aiTitle.split(' ').length} words)`);
+                    }
+                } else {
+                    console.log(`ℹ️ No query found for session ${session.sessionID}, using default title`);
+                }
             }
         } catch (error) {
             console.warn(`Failed to get first query for session ${session.sessionID}:`, error);
         }
         
-        // Create a more descriptive title
+        // Create title with date/time and AI-generated title
         const sessionDate = new Date(session.created_at || session.last_interaction || Date.now());
-        const timeStr = sessionDate.toLocaleDateString() + ' ' + sessionDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const dateStr = sessionDate.toLocaleDateString();
+        const timeStr = sessionDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         
-        // Truncate first query if it's too long
-        const truncatedQuery = firstQuery.length > 50 ? firstQuery.substring(0, 50) + '...' : firstQuery;
-        const title = firstQuery ? `Chat - ${timeStr} - ${truncatedQuery}` : `Chat - ${timeStr}`;
+        // Use AI title or fallback to first 4 words if no query
+        let titleText = aiTitle || (firstQuery ? (() => {
+            const words = firstQuery.trim().split(/\s+/);
+            const firstFourWords = words.slice(0, 4).join(' ');
+            // If we have less than 4 words, use what we have
+            return firstFourWords || "Chat";
+        })() : "Chat");
+        
+        // Validate and clean the title
+        if (!titleText || titleText.trim() === "") {
+            titleText = "Chat";
+        } else {
+            // Truncate if too long (max 30 characters)
+            titleText = titleText.trim();
+            if (titleText.length > 30) {
+                titleText = titleText.substring(0, 27) + "...";
+            }
+        }
+        
+        // Format as two lines: date/time on first line, title on second line
+        const title = `${dateStr} ${timeStr}\n${titleText}`;
         
         return {
             id: session.sessionID,
@@ -732,6 +778,71 @@ export async function getSpeechApi(text: string): Promise<string | null> {
     } catch (error) {
         console.error("Speech API error:", error);
         return null;
+    }
+}
+
+// Title summarizer cache to avoid regenerating titles for the same queries
+const titleCache = new Map<string, string>();
+
+// Function to clear title cache if needed
+export function clearTitleCache(): void {
+    titleCache.clear();
+    console.log('🗑️ Title cache cleared');
+}
+
+// Title summarizer API
+export async function titleSummarizerApi(text: string, maxWords: number = 4, idToken: string): Promise<{ title: string }> {
+    // Check cache first
+    const cacheKey = `${text}_${maxWords}`;
+    if (titleCache.has(cacheKey)) {
+        console.log(`📋 Using cached title for: "${text.substring(0, 30)}..."`);
+        return { title: titleCache.get(cacheKey)! };
+    }
+    
+    const headers = await getHeaders(idToken);
+    
+    // Add timeout to prevent hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
+    try {
+        const response = await fetch(`${BACKEND_URI}/title-summarizer`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+                text: text,
+                max_words: maxWords
+            }),
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            throw new Error(`Title summarizer failed: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        
+        console.log(`🔍 Title summarizer response:`, result);
+        
+        // Validate the response - check for both 'title' and 'summary' fields
+        const title = result.title || result.summary;
+        if (!result || typeof title !== 'string' || title.trim() === '') {
+            console.error(`❌ Invalid title response:`, result);
+            throw new Error('Invalid title response from API');
+        }
+        
+        // Cache the result
+        titleCache.set(cacheKey, title);
+        
+        return { title: title };
+    } catch (error) {
+        clearTimeout(timeoutId);
+        if (error instanceof Error && error.name === 'AbortError') {
+            throw new Error('Title summarizer request timed out');
+        }
+        throw error;
     }
 }
 

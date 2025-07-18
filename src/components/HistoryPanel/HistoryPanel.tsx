@@ -8,7 +8,7 @@ import { useHistoryManager, HistoryMetaData } from "../HistoryProviders";
 import { useTranslation } from "react-i18next";
 import styles from "./HistoryPanel.module.css";
 
-const HISTORY_COUNT_PER_LOAD = 20;
+const HISTORY_COUNT_PER_LOAD = 10; // Show last 10 conversations
 
 export const HistoryPanel = ({
     provider,
@@ -55,7 +55,8 @@ export const HistoryPanel = ({
         if (items.length === 0) {
             setHasMoreHistory(false);
         }
-        setHistory(prevHistory => [...prevHistory, ...items]);
+        // Replace history instead of appending (we want exactly 10 conversations)
+        setHistory(items);
         setIsLoading(() => false);
     };
 
@@ -82,7 +83,7 @@ export const HistoryPanel = ({
             type={PanelType.customNear}
             style={{ padding: "0px" }}
             headerText={t("history.chatHistory")}
-            customWidth="300px"
+            customWidth="350px"
             isBlocking={false}
             isOpen={isOpen}
             onDismiss={() => onClose()}
@@ -103,7 +104,7 @@ export const HistoryPanel = ({
                 ))}
                 {isLoading && <Spinner style={{ marginTop: "10px" }} />}
                 {history.length === 0 && !isLoading && <p>{t("history.noHistory")}</p>}
-                {hasMoreHistory && !isLoading && <InfiniteLoadingButton func={loadMoreHistory} />}
+                {/* Removed infinite loading since we want exactly 10 conversations */}
             </div>
         </Panel>
     );
@@ -146,36 +147,4 @@ function groupHistory(history: HistoryData[]) {
     );
 }
 
-const InfiniteLoadingButton = ({ func }: { func: () => void }) => {
-    const buttonRef = useRef(null);
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            entries => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        if (buttonRef.current) {
-                            func();
-                        }
-                    }
-                });
-            },
-            {
-                root: null,
-                threshold: 0
-            }
-        );
-
-        if (buttonRef.current) {
-            observer.observe(buttonRef.current);
-        }
-
-        return () => {
-            if (buttonRef.current) {
-                observer.unobserve(buttonRef.current);
-            }
-        };
-    }, []);
-
-    return <button ref={buttonRef} onClick={func} />;
-};
+// Removed InfiniteLoadingButton component since we no longer need infinite loading
